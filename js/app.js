@@ -147,20 +147,13 @@ function repeatTask(taskId, repeatCount, repeatInterval) {
     }
 }
 
-function loadTasks() {
-    const taskSelector = document.getElementById('taskSelector');
-    for (let key in tasks) {
-        addTaskToSelector(key);
-    }
-}
-
 function addTaskToSelector(taskId) {
     const selector = document.getElementById('taskSelector');
     const option = document.createElement('option');
     option.value = taskId;
-    option.text = `Task ${taskId}`;
-    selector.add(option);
+    option.textContent = `Task ${taskId}`;
+    selector.appendChild(option);
 }
 
-// Load tasks on page load
-window.onload = loadTasks;
+// Initialize task selector with saved tasks
+Object.keys(tasks).forEach(taskId => addTaskToSelector(taskId));
