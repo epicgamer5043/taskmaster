@@ -3,37 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskMaster</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <title>Taskmaster</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <nav class="navbar">
+        <h1>Taskmaster</h1>
+        <div>
+            <a href="#" onclick="showSection('dashboard')">Dashboard</a>
+            <a href="#" onclick="showSection('task-builder')">Task Builder</a>
+            <a href="#" onclick="showSection('reports')">Reports</a>
+        </div>
+    </nav>
+
     <div class="container">
-        <header>
-            <h1>TaskMaster</h1>
-        </header>
-        <main>
-            <section class="controls">
-                <h2>Automate Your Tasks</h2>
-                <button id="record" class="btn">Start Recording</button>
-                <button id="stop" class="btn">Stop Recording</button>
-                <button id="play" class="btn">Play</button>
-                <select id="taskSelector" class="input"></select>
-                <input type="datetime-local" id="scheduleTime" class="input">
-                <button id="schedule" class="btn">Schedule</button>
-                <input type="number" id="repeatCount" class="input" placeholder="Number of Repetitions">
-                <input type="number" id="repeatInterval" class="input" placeholder="Interval (ms)">
-                <button id="repeat" class="btn">Repeat Task</button>
-                <div id="status" class="status"></div>
-            </section>
-            <section class="log">
-                <h3>Action Log</h3>
-                <ul id="logList"></ul>
-            </section>
-        </main>
+        <div id="dashboard" class="section">
+            <h2>Dashboard</h2>
+            <div id="task-list"></div>
+        </div>
+
+        <div id="task-builder" class="section" style="display:none;">
+            <h2>Task Builder</h2>
+            <form id="task-form">
+                <div class="form-group">
+                    <label for="task-name">Task Name</label>
+                    <input type="text" id="task-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-script">Task Script</label>
+                    <textarea id="task-script" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-schedule">Task Schedule</label>
+                    <input type="text" id="task-schedule" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Create Task</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="reports" class="section" style="display:none;">
+            <h2>Reports</h2>
+            <div id="report-list"></div>
+        </div>
     </div>
-    <script src="js/app.js"></script>
+
+    <script src="script.js"></script>
 </body>
 </html>
