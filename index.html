@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TaskMaster</h1>
+        </header>
+        <main>
+            <h2>Automate Your Tasks</h2>
+            <div class="controls">
+                <button id="record">Start Recording</button>
+                <button id="stop">Stop Recording</button>
+                <button id="play">Play</button>
+                <select id="taskSelector"></select>
+                <input type="datetime-local" id="scheduleTime">
+                <button id="schedule">Schedule</button>
+                <button id="repeat">Repeat Task</button>
+                <input type="number" id="repeatCount" placeholder="Number of Repetitions">
+                <input type="number" id="repeatInterval" placeholder="Interval (ms)">
+            </div>
+            <div id="status"></div>
+            <div class="log">
+                <h3>Action Log</h3>
+                <ul id="logList"></ul>
+            </div>
+        </main>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+</html>
