@@ -1,159 +1,107 @@
-let isRecording = false;
+let tasks = [];
+let recording = false;
 let actions = [];
-let tasks = JSON.parse(localStorage.getItem('tasks')) || {};
 
-document.getElementById('record').addEventListener('click', () => {
-    if (!isRecording) {
-        isRecording = true;
-        actions = [];
-        document.getElementById('status').textContent = "Recording...";
-        document.addEventListener('mousemove', recordAction);
-        document.addEventListener('keydown', recordAction);
-        document.addEventListener('keyup', recordAction);
-    }
+document.getElementById('task-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('task-name').value;
+    const script = document.getElementById('task-script').value;
+    const schedule = document.getElementById('task-schedule').value;
+
+    const task = { name, script, schedule, status: 'pending' };
+    tasks.push(task);
+    displayTasks();
+    document.getElementById('task-form').reset();
 });
 
-document.getElementById('stop').addEventListener('click', () => {
-    if (isRecording) {
-        isRecording = false;
-        document.getElementById('status').textContent = "Stopped Recording";
-        document.removeEventListener('mousemove', recordAction);
-        document.removeEventListener('keydown', recordAction);
-        document.removeEventListener('keyup', recordAction);
-        saveTask(actions);
-    }
-});
+function displayTasks() {
+    const taskList = document.getElementById('task-list');
+    taskList.innerHTML = '';
+    tasks.forEach((task, index) => {
+        const taskItem = document.createElement('div');
+        taskItem.className = 'task-item';
+        taskItem.innerHTML = `
+            <div>
+                <h3>${task.name}</h3>
+                <p>Schedule: ${task.schedule}</p>
+                <p>Status: ${task.status}</p>
+            </div>
+            <button onclick="runTask(${index})">Run</button>
+        `;
+        taskList.appendChild(taskItem);
+    });
+}
 
-document.getElementById('play').addEventListener('click', () => {
-    const selector = document.getElementById('taskSelector');
-    const taskId = selector.options[selector.selectedIndex].value;
-    if (taskId) {
-        playTask(tasks[taskId]);
-    }
-});
+function runTask(index) {
+    const task = tasks[index];
+    task.status = 'running';
+    displayTasks();
+    const script = JSON.parse(task.script);
+    replayActions(script, () => {
+        task.status = 'completed';
+        displayTasks();
+    });
+}
 
-document.getElementById('schedule').addEventListener('click', () => {
-    const selector = document.getElementById('taskSelector');
-    const taskId = selector.options[selector.selectedIndex].value;
-    const scheduleTime = document.getElementById('scheduleTime').value;
-    if (taskId && scheduleTime) {
-        scheduleTask(taskId, scheduleTime);
-    }
-});
+function showSection(sectionId) {
+    const sections = document.querySelectorAll('.section');
+    sections.forEach(section => {
+        section.style.display = 'none';
+    });
+    document.getElementById(sectionId).style.display = 'block';
+}
 
-document.getElementById('repeat').addEventListener('click', () => {
-    const selector = document.getElementById('taskSelector');
-    const taskId = selector.options[selector.selectedIndex].value;
-    const repeatCount = document.getElementById('repeatCount').value;
-    const repeatInterval = document.getElementById('repeatInterval').value;
-    if (taskId && repeatCount && repeatInterval) {
-        repeatTask(taskId, repeatCount, repeatInterval);
-    }
-});
+function startRecording() {
+    actions = [];
+    recording = true;
+    document.addEventListener('mousemove', recordAction);
+    document.addEventListener('click', recordAction);
+    document.addEventListener('keydown', recordAction);
+}
+
+function stopRecording() {
+    recording = false;
+    document.removeEventListener('mousemove', recordAction);
+    document.removeEventListener('click', recordAction);
+    document.removeEventListener('keydown', recordAction);
+    document.getElementById('task-script').value = JSON.stringify(actions, null, 2);
+}
 
 function recordAction(event) {
-    const action = {
-        type: event.type,
-        timestamp: Date.now(),
-        details: {
-            x: event.clientX,
-            y: event.clientY,
-            key: event.key,
-            code: event.code
-        }
-    };
+    if (!recording) return;
+    const { type, clientX, clientY, key } = event;
+    const action = { type, clientX, clientY, key, timestamp: Date.now() };
     actions.push(action);
-    logAction(action);
 }
 
-function logAction(action) {
-    const logList = document.getElementById('logList');
-    const logItem = document.createElement('li');
-    logItem.textContent = `Action: ${action.type}, X: ${action.details.x}, Y: ${action.details.y}, Key: ${action.details.key}`;
-    logList.appendChild(logItem);
+function replayActions(actions, callback) {
+    if (actions.length === 0) {
+        callback();
+        return;
+    }
+    const action = actions.shift();
+    setTimeout(() => {
+        performAction(action);
+        replayActions(actions, callback);
+    }, 100);
 }
 
-function simulateAction(action) {
-    switch (action.type) {
+function performAction(action) {
+    const { type, clientX, clientY, key } = action;
+    switch (type) {
         case 'mousemove':
-            simulateMouseMove(action.details.x, action.details.y);
+            const mouseMoveEvent = new MouseEvent('mousemove', { clientX, clientY });
+            document.dispatchEvent(mouseMoveEvent);
+            break;
+        case 'click':
+            const clickEvent = new MouseEvent('click', { clientX, clientY });
+            document.dispatchEvent(clickEvent);
             break;
         case 'keydown':
-            simulateKeyEvent(action.details.key, action.details.code, 'keydown');
+            const keyboardEvent = new KeyboardEvent('keydown', { key });
+            document.dispatchEvent(keyboardEvent);
             break;
-        case 'keyup':
-            simulateKeyEvent(action.details.key, action.details.code, 'keyup');
+        default:
             break;
     }
 }
-
-function simulateMouseMove(x, y) {
-    const event = new MouseEvent('mousemove', {
-        clientX: x,
-        clientY: y,
-        bubbles: true,
-        cancelable: true
-    });
-    document.dispatchEvent(event);
-}
-
-function simulateKeyEvent(key, code, type) {
-    const event = new KeyboardEvent(type, {
-        key: key,
-        code: code,
-        bubbles: true,
-        cancelable: true
-    });
-    document.dispatchEvent(event);
-}
-
-function saveTask(actions) {
-    const taskId = Date.now().toString();
-    tasks[taskId] = actions;
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    addTaskToSelector(taskId);
-    document.getElementById('status').textContent = "Task Recorded Successfully";
-}
-
-function playTask(actions) {
-    actions.forEach((action, index) => {
-        setTimeout(() => {
-            simulateAction(action);
-        }, index * 100); // Adjust the interval as needed
-    });
-}
-
-function scheduleTask(taskId, scheduleTime) {
-    const now = new Date();
-    const scheduleDate = new Date(scheduleTime);
-    const delay = scheduleDate.getTime() - now.getTime();
-
-    if (delay > 0) {
-        setTimeout(() => {
-            playTask(tasks[taskId]);
-            document.getElementById('status').textContent = `Task ${taskId} played at ${scheduleTime}`;
-        }, delay);
-    } else {
-        document.getElementById('status').textContent = "Invalid schedule time.";
-    }
-}
-
-function repeatTask(taskId, repeatCount, repeatInterval) {
-    for (let i = 0; i < repeatCount; i++) {
-        setTimeout(() => {
-            playTask(tasks[taskId]);
-            document.getElementById('status').textContent = `Task ${taskId} repeated ${i + 1} times`;
-        }, i * repeatInterval);
-    }
-}
-
-function addTaskToSelector(taskId) {
-    const selector = document.getElementById('taskSelector');
-    const option = document.createElement('option');
-    option.value = taskId;
-    option.textContent = `Task ${taskId}`;
-    selector.appendChild(option);
-}
-
-// Initialize task selector with saved tasks
-Object.keys(tasks).forEach(taskId => addTaskToSelector(taskId));
